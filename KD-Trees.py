@@ -1,12 +1,25 @@
+import subprocess
+import sys
 import pandas as pd
 import random
 import time
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib import colors
+
+
+def install_package(package):
+    subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+
+
+
+
 
 class KdTree:
     def __init__(self, dim, points):
         self._dim = dim
-        self._points = points.copy()  # Create a copy to avoid modifying the original
-        random.shuffle(self._points)  # Shuffle the dataset to ensure balanced splits
+        self._points = points.copy()  # Creating a copy to avoid modifying the original
+        random.shuffle(self._points)  # Shuffling the dataset to ensure balanced splits
         self._root = self._make_kd_tree()
 
     def _make_kd_tree(self):
@@ -29,7 +42,7 @@ class KdTree:
             points[median_idx]
         ]
 
-    def print_kd_tree(self, node=None, depth=0, max_depth=3):
+    def print_kd_tree(self, node=None, depth=0, max_depth=5):
         """
         Print a visual representation of the KD-tree structure.
         Limited to a specified max_depth to avoid overwhelming output.
@@ -139,8 +152,21 @@ class KdTree:
 
 
 if __name__ == "__main__":
+
+    try:
+        install_package("pandas")
+        install_package("openpyxl")
+        install_package("matplotlib")
+        install_package("numpy")
+    except Exception as e:
+        print(f"Error installing packages: {e}")
+        print("Please make sure you have pip installed and try again.")
+        sys.exit(1)
+
+
+
     # Load TPC-H Lineitem data from Excel
-    file_path = "mp1_dataset_100k.xlsx"  # Change this to your file's actual path
+    file_path = "mp1_dataset_10k.xlsx"  # Change this to either the 100k version or the 10k version
     print(f"Loading data from {file_path}...")
     
     df = pd.read_excel(file_path, usecols=["l_orderkey", "l_partkey", "l_suppkey", "l_quantity", "l_extendedprice"])
@@ -160,9 +186,13 @@ if __name__ == "__main__":
         p75 = df[col].quantile(0.75)
         print(f"{col}: min={min_val}, 25th={p25}, median={median}, 75th={p75}, max={max_val}")
 
-    # Convert to list of tuples
+
+
+    # Convert data to list of tuples
     points = list(df.itertuples(index=False, name=None))
     
+
+
     # Build KD-Tree
     print("\nBuilding KD-Tree...")
     start_time = time.time()
@@ -170,10 +200,16 @@ if __name__ == "__main__":
     build_time = time.time() - start_time
     print(f"KD-Tree built successfully in {build_time:.4f} seconds.")
     
+
+
+
     # Print KD-Tree structure (limited to first few levels)
     print("\nKD-Tree Structure (showing first 3 levels):")
     kd_tree.print_kd_tree(max_depth=3)
     
+
+
+
     # Print tree statistics
     tree_stats = kd_tree.tree_stats()
     print("\nKD-Tree Statistics:")
@@ -183,6 +219,10 @@ if __name__ == "__main__":
     print(f"- Leaf nodes: {tree_stats['leaf_nodes']}")
     print(f"- Average depth: {tree_stats['avg_depth']:.2f}")
     print(f"- Nodes per level: {dict(sorted(tree_stats['depth_counts'].items()))}")
+
+
+
+
 
     # Define range query bounds based on actual data distribution
     query_bounds = [
@@ -195,12 +235,20 @@ if __name__ == "__main__":
 
     print(f"\nExecuting range query with data-driven bounds: {query_bounds}")
     
+
+
+
+
     # Perform range query using KD-Tree
     start_time = time.time()
     kd_results = kd_tree.get_points_within_bounds(query_bounds)
     kd_query_time = time.time() - start_time
     print(f"KD-Tree query completed in {kd_query_time:.4f} seconds.")
     print(f"Found {len(kd_results)} matching records")
+
+
+
+
 
     # Sample output of first few results
     print("\nSample KD-Tree Results:")
@@ -209,6 +257,11 @@ if __name__ == "__main__":
     if len(kd_results) > 5:
         print(f"... and {len(kd_results) - 5} more")
 
+
+
+
+
+
     # Perform brute-force search for comparison
     print("\nExecuting brute force search with the same bounds...")
     start_time = time.time()
@@ -216,6 +269,10 @@ if __name__ == "__main__":
     brute_force_time = time.time() - start_time
     print(f"Brute force search completed in {brute_force_time:.4f} seconds.")
     print(f"Found {len(brute_force_results)} matching records")
+
+
+
+
 
     # Sample output of first few results
     print("\nSample Brute Force Results:")
@@ -282,3 +339,58 @@ if __name__ == "__main__":
     # Performance comparison
     if brute_force_time2 > 0 and kd_query_time2 > 0:
         print(f"Speedup factor: {brute_force_time2 / kd_query_time2:.2f}x")
+    
+
+    # Generate n unique queries with different bounds
+    query_results = []
+    for i in range(50):
+        query_bounds = [
+            (df[col].quantile(np.random.uniform(0, 0.4)), df[col].quantile(np.random.uniform(0.6, 1)))
+            for col in ["l_orderkey", "l_partkey", "l_suppkey", "l_quantity", "l_extendedprice"]
+        ]
+        
+        # Perform range query using KD-Tree
+        start_time = time.time()
+        kd_results = kd_tree.get_points_within_bounds(query_bounds)
+        kd_query_time = time.time() - start_time
+        
+        # Perform brute-force search for comparison
+        start_time = time.time()
+        brute_force_results = kd_tree.brute_force_search(query_bounds)
+        brute_force_time = time.time() - start_time
+        
+        # Store results
+        query_results.append({
+            "query_index": i + 1,
+            "kd_query_time": kd_query_time,
+            "brute_force_time": brute_force_time,
+            "kd_results_count": len(kd_results),
+            "brute_force_results_count": len(brute_force_results)
+        })
+        
+        print(f"Query {i + 1}: KD-Tree={kd_query_time:.4f}s, Brute Force={brute_force_time:.4f}s, Matches={len(kd_results)}")
+
+    
+
+    # Analyze performance
+    avg_kd_time = np.mean([q["kd_query_time"] for q in query_results])
+    avg_brute_time = np.mean([q["brute_force_time"] for q in query_results])
+    speedup_factor = avg_brute_time / avg_kd_time if avg_kd_time > 0 else float('inf')
+    
+    print("\nPerformance Summary:")
+    print(f"- Average KD-Tree Query Time: {avg_kd_time:.4f} seconds")
+    print(f"- Average Brute Force Query Time: {avg_brute_time:.4f} seconds")
+    print(f"- Average Speedup Factor: {speedup_factor:.2f}x")
+    
+    # Visualize query performance
+    plt.figure(figsize=(10, 5))
+    plt.plot([q["query_index"] for q in query_results], [q["kd_query_time"] for q in query_results], label="KD-Tree", marker="o")
+    plt.plot([q["query_index"] for q in query_results], [q["brute_force_time"] for q in query_results], label="Brute Force", marker="x")
+    plt.xlabel("Query Index")
+    plt.ylabel("Execution Time (s)")
+    plt.title("KD-Tree vs Brute Force Query Performance")
+    plt.legend()
+    plt.grid()
+    plt.show()
+    
+    print("\nAll queries executed and plotted successfully")
