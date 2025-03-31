@@ -1,6 +1,16 @@
+import subprocess
+import sys
 import pandas as pd
 import random
 import time
+
+
+def install_package(package):
+    subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+
+
+
+
 
 class KdTree:
     def __init__(self, dim, points):
@@ -139,6 +149,12 @@ class KdTree:
 
 
 if __name__ == "__main__":
+
+    install_package("pandas")
+    install_package("openpyxl")
+
+
+
     # Load TPC-H Lineitem data from Excel
     file_path = "mp1_dataset_100k.xlsx"  # Change this to your file's actual path
     print(f"Loading data from {file_path}...")
