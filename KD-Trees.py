@@ -342,32 +342,32 @@ if __name__ == "__main__":
     
 
 
-# Try a different set of query bounds for comparison
-print("\n\nTrying a different set of query bounds...")
-query_bounds3 = [
+    # Try a different set of query bounds for comparison
+    print("\n\nTrying a different set of query bounds...")
+    query_bounds3 = [
     (df['l_orderkey'].quantile(0.1), df['l_orderkey'].quantile(0.4)),  # lower range of orderkeys
     (df['l_partkey'].quantile(0.6), df['l_partkey'].quantile(0.9)),    # higher range of partkeys
     (df['l_suppkey'].quantile(0.4), df['l_suppkey'].quantile(0.8)),    # upper middle range of suppkeys
     (df['l_quantity'].quantile(0.1), df['l_quantity'].quantile(0.5)),  # lower half of quantities
     (df['l_extendedprice'].quantile(0.7), df['l_extendedprice'].quantile(0.95)) # higher range of prices
 ]
-print(f"\nExecuting third range query with bounds: {query_bounds3}")
+    print(f"\nExecuting third range query with bounds: {query_bounds3}")
 
-# Perform range query using KD-Tree
-start_time = time.time()
-kd_results3 = kd_tree.get_points_within_bounds(query_bounds3)
-kd_query_time3 = time.time() - start_time
-print(f"KD-Tree query completed in {kd_query_time3:.4f} seconds.")
-print(f"Found {len(kd_results3)} matching records")
+    # Perform range query using KD-Tree
+    start_time = time.time()
+    kd_results3 = kd_tree.get_points_within_bounds(query_bounds3)
+    kd_query_time3 = time.time() - start_time
+    print(f"KD-Tree query completed in {kd_query_time3:.4f} seconds.")
+    print(f"Found {len(kd_results3)} matching records")
 
-# Perform brute-force search for comparison
-start_time = time.time()
-brute_force_results3 = kd_tree.brute_force_search(query_bounds3)
-brute_force_time3 = time.time() - start_time
-print(f"Brute force search completed in {brute_force_time3:.4f} seconds.")
-print(f"Found {len(brute_force_results3)} matching records")
+    # Perform brute-force search for comparison
+    start_time = time.time()
+    brute_force_results3 = kd_tree.brute_force_search(query_bounds3)
+    brute_force_time3 = time.time() - start_time
+    print(f"Brute force search completed in {brute_force_time3:.4f} seconds.")
+    print(f"Found {len(brute_force_results3)} matching records")
 
-# Verify that both methods give the same results
+    # Verify that both methods give the same results
 kd_set3 = set(kd_results3)
 bf_set3 = set(brute_force_results3)
 if kd_set3 == bf_set3:
@@ -560,6 +560,118 @@ else:
     print("\nWARNING: Results differ between methods!")
 if brute_force_time8 > 0 and kd_query_time8 > 0:
     print(f"Speedup factor: {brute_force_time8 / kd_query_time8:.2f}x")
+
+# Try a query with alternating narrow and wide ranges
+print("\n\nTrying a query with alternating narrow and wide ranges...")
+query_bounds9 = [
+    (df['l_orderkey'].quantile(0.45), df['l_orderkey'].quantile(0.55)),  # narrow middle range of orderkeys
+    (df['l_partkey'].quantile(0.2), df['l_partkey'].quantile(0.8)),      # wide middle range of partkeys
+    (df['l_suppkey'].quantile(0.45), df['l_suppkey'].quantile(0.55)),    # narrow middle range of suppkeys
+    (df['l_quantity'].quantile(0.2), df['l_quantity'].quantile(0.8)),    # wide middle range of quantities
+    (df['l_extendedprice'].quantile(0.45), df['l_extendedprice'].quantile(0.55))  # narrow middle range of prices
+]
+print(f"\nExecuting ninth range query with bounds: {query_bounds9}")
+
+# Perform range query using KD-Tree
+start_time = time.time()
+kd_results9 = kd_tree.get_points_within_bounds(query_bounds9)
+kd_query_time9 = time.time() - start_time
+print(f"KD-Tree query completed in {kd_query_time9:.4f} seconds.")
+print(f"Found {len(kd_results9)} matching records")
+
+# Perform brute-force search for comparison
+start_time = time.time()
+brute_force_results9 = kd_tree.brute_force_search(query_bounds9)
+brute_force_time9 = time.time() - start_time
+print(f"Brute force search completed in {brute_force_time9:.4f} seconds.")
+print(f"Found {len(brute_force_results9)} matching records")
+
+# Verify results and calculate speedup
+kd_set9 = set(kd_results9)
+bf_set9 = set(brute_force_results9)
+if kd_set9 == bf_set9:
+    print("\nBoth methods returned identical results!")
+else:
+    print("\nWARNING: Results differ between methods!")
+if brute_force_time9 > 0 and kd_query_time9 > 0:
+    print(f"Speedup factor: {brute_force_time9 / kd_query_time9:.2f}x")
+
+# Try a query with open-ended ranges (using min/max) on some dimensions
+print("\n\nTrying a query with some open-ended ranges...")
+query_bounds10 = [
+    (df['l_orderkey'].min(), df['l_orderkey'].quantile(0.3)),           # open-ended low range of orderkeys
+    (df['l_partkey'].quantile(0.7), df['l_partkey'].max()),             # open-ended high range of partkeys
+    (df['l_suppkey'].quantile(0.4), df['l_suppkey'].quantile(0.6)),     # middle range of suppkeys
+    (df['l_quantity'].min(), df['l_quantity'].max()),                   # full range of quantities
+    (df['l_extendedprice'].quantile(0.3), df['l_extendedprice'].quantile(0.7))  # middle range of prices
+]
+print(f"\nExecuting tenth range query with bounds: {query_bounds10}")
+
+# Perform range query using KD-Tree
+start_time = time.time()
+kd_results10 = kd_tree.get_points_within_bounds(query_bounds10)
+kd_query_time10 = time.time() - start_time
+print(f"KD-Tree query completed in {kd_query_time10:.4f} seconds.")
+print(f"Found {len(kd_results10)} matching records")
+
+# Perform brute-force search for comparison
+start_time = time.time()
+brute_force_results10 = kd_tree.brute_force_search(query_bounds10)
+brute_force_time10 = time.time() - start_time
+print(f"Brute force search completed in {brute_force_time10:.4f} seconds.")
+print(f"Found {len(brute_force_results10)} matching records")
+
+# Verify results and calculate speedup
+kd_set10 = set(kd_results10)
+bf_set10 = set(brute_force_results10)
+if kd_set10 == bf_set10:
+    print("\nBoth methods returned identical results!")
+else:
+    print("\nWARNING: Results differ between methods!")
+if brute_force_time10 > 0 and kd_query_time10 > 0:
+    print(f"Speedup factor: {brute_force_time10 / kd_query_time10:.2f}x")
+
+# Summarize all query performance results
+print("\n\n===== PERFORMANCE SUMMARY =====")
+print("Query | Records | KD-Tree Time | Brute Force Time | Speedup")
+print("-" * 65)
+try:
+    print(f"2     | {len(kd_results2):<7} | {kd_query_time2:.4f}s      | {brute_force_time2:.4f}s          | {brute_force_time2/kd_query_time2:.2f}x")
+except NameError:
+    pass
+try:
+    print(f"3     | {len(kd_results3):<7} | {kd_query_time3:.4f}s      | {brute_force_time3:.4f}s          | {brute_force_time3/kd_query_time3:.2f}x")
+except NameError:
+    pass
+try:
+    print(f"4     | {len(kd_results4):<7} | {kd_query_time4:.4f}s      | {brute_force_time4:.4f}s          | {brute_force_time4/kd_query_time4:.2f}x")
+except NameError:
+    pass
+try:
+    print(f"5     | {len(kd_results5):<7} | {kd_query_time5:.4f}s      | {brute_force_time5:.4f}s          | {brute_force_time5/kd_query_time5:.2f}x")
+except NameError:
+    pass
+try:
+    print(f"6     | {len(kd_results6):<7} | {kd_query_time6:.4f}s      | {brute_force_time6:.4f}s          | {brute_force_time6/kd_query_time6:.2f}x")
+except NameError:
+    pass
+try:
+    print(f"7     | {len(kd_results7):<7} | {kd_query_time7:.4f}s      | {brute_force_time7:.4f}s          | {brute_force_time7/kd_query_time7:.2f}x")
+except NameError:
+    pass
+try:
+    print(f"8     | {len(kd_results8):<7} | {kd_query_time8:.4f}s      | {brute_force_time8:.4f}s          | {brute_force_time8/kd_query_time8:.2f}x")
+except NameError:
+    pass
+try:
+    print(f"9     | {len(kd_results9):<7} | {kd_query_time9:.4f}s      | {brute_force_time9:.4f}s          | {brute_force_time9/kd_query_time9:.2f}x")
+except NameError:
+    pass
+try:
+    print(f"10    | {len(kd_results10):<7} | {kd_query_time10:.4f}s      | {brute_force_time10:.4f}s          | {brute_force_time10/kd_query_time10:.2f}x")
+except NameError:
+    pass
+
 
 
 print("\nAll queries executed successfully")
