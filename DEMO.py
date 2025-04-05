@@ -249,7 +249,7 @@ class KdTree:
 def datetime_to_numeric(dt):
     """Convert datetime to numeric value for use in KD-Tree"""
     if isinstance(dt, datetime.datetime) or isinstance(dt, datetime.date):
-        # Convert to days since epoch
+        # Convert to days
         return (dt - datetime.datetime(1970, 1, 1).date()).days
     return dt
 

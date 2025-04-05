@@ -166,7 +166,7 @@ if __name__ == "__main__":
 
 
     # Load TPC-H Lineitem data from Excel
-    file_path = "mp1_dataset_100k.xlsx"  # Change this to either the 100k version or the 10k version
+    file_path = "mp1_dataset_10k.xlsx"  # Change this to either the 100k version or the 10k version
     print(f"Loading data from {file_path}...")
     
     df = pd.read_excel(file_path, usecols=["l_orderkey", "l_partkey", "l_suppkey", "l_quantity", "l_extendedprice"])
